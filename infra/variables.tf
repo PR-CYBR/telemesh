@@ -1,10 +1,9 @@
-# PR-CYBR Agent Standard Variables
-# These variables align with the PR-CYBR agent-variables.tf standard
-# Values can be provided via variables.tfvars or environment variables (TF_VAR_*)
+# TeleMesh Infrastructure Variables
 
 variable "agent_id" {
   description = "Unique identifier for the PR-CYBR agent"
   type        = string
+  default     = "telemesh-agent"
 
   validation {
     condition     = can(regex("^[a-z0-9-]+$", var.agent_id))
@@ -13,19 +12,20 @@ variable "agent_id" {
 }
 
 variable "agent_role" {
-  description = "Role or function of the PR-CYBR agent (e.g., coordinator, executor, monitor)"
+  description = "Role of the TeleMesh agent (gateway, watcher, edge)"
   type        = string
-  default     = "agent"
+  default     = "gateway"
 
   validation {
-    condition     = length(var.agent_role) > 0
-    error_message = "Agent role must not be empty."
+    condition     = contains(["gateway", "watcher", "edge", "controller"], var.agent_role)
+    error_message = "Agent role must be one of: gateway, watcher, edge, controller."
   }
 }
 
 variable "environment" {
   description = "Deployment environment (dev, staging, prod)"
   type        = string
+  default     = "dev"
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
@@ -41,15 +41,46 @@ variable "dockerhub_user" {
 }
 
 variable "notion_page_id" {
-  description = "Notion page ID for agent documentation and tracking"
+  description = "Notion page ID for agent documentation"
   type        = string
   default     = ""
-
-  validation {
-    condition     = var.notion_page_id == "" || can(regex("^[a-f0-9]{32}$", var.notion_page_id))
-    error_message = "Notion page ID must be a 32-character hexadecimal string or empty."
-  }
 }
 
-# Additional agent-specific variables can be added below
-# Follow the PR-CYBR naming conventions and include appropriate validation
+# Networking variables
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "enable_ipv6" {
+  description = "Enable IPv6 support"
+  type        = bool
+  default     = false
+}
+
+# Overlay network variables
+variable "tailscale_enabled" {
+  description = "Enable Tailscale overlay network"
+  type        = bool
+  default     = false
+}
+
+variable "tailscale_authkey" {
+  description = "Tailscale authentication key"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "zerotier_enabled" {
+  description = "Enable ZeroTier overlay network"
+  type        = bool
+  default     = false
+}
+
+variable "zerotier_network" {
+  description = "ZeroTier network ID"
+  type        = string
+  default     = ""
+}

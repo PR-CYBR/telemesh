@@ -1,23 +1,18 @@
-# Main Terraform Configuration for PR-CYBR Agent Infrastructure
-# This file contains the core infrastructure setup for PR-CYBR agents
+# TeleMesh Infrastructure Configuration
+# This file contains the core infrastructure setup for TeleMesh deployment
 
 # Terraform backend configuration
 # Uncomment and configure when ready to use remote state
-# Note: Backend configuration does not support variable interpolation
-# Replace the workspace name with your actual workspace name when enabling
 # terraform {
 #   backend "remote" {
 #     organization = "PR-CYBR"
 #     workspaces {
-#       name = "agent-your-agent-id-your-environment"
+#       name = "telemesh-${var.environment}"
 #     }
 #   }
 # }
 
-# Example resource placeholder
-# Add your infrastructure resources here based on agent requirements
-# This template is intentionally minimal to remain flexible for various agent types
-
+# TeleMesh Agent Configuration
 resource "null_resource" "agent_config" {
   triggers = {
     agent_id    = var.agent_id
@@ -26,6 +21,26 @@ resource "null_resource" "agent_config" {
   }
 
   provisioner "local-exec" {
-    command = "echo 'Agent ${var.agent_id} configured for ${var.environment} environment'"
+    command = "echo 'TeleMesh Agent ${var.agent_id} configured for ${var.environment} environment'"
   }
+}
+
+# Networking module for overlay networks
+module "networking" {
+  source = "./terraform/modules/networking"
+
+  environment = var.environment
+  vpc_cidr    = var.vpc_cidr
+  enable_ipv6 = var.enable_ipv6
+}
+
+# Overlay network module (Tailscale/ZeroTier)
+module "overlay" {
+  source = "./terraform/modules/overlay"
+
+  environment       = var.environment
+  tailscale_enabled = var.tailscale_enabled
+  tailscale_authkey = var.tailscale_authkey
+  zerotier_enabled  = var.zerotier_enabled
+  zerotier_network  = var.zerotier_network
 }

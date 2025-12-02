@@ -1,124 +1,164 @@
-[![Spec-Kit Validation](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml/badge.svg?branch=main)](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml)  
+# TeleMesh - PR-CYBR Telemetry Mesh Network
+
+[![Spec-Kit Validation](https://github.com/PR-CYBR/telemesh/actions/workflows/spec-kit.yml/badge.svg?branch=main)](https://github.com/PR-CYBR/telemesh/actions/workflows/spec-kit.yml)
+
 **Branch Purpose:** The `main` branch is the stable baseline representing production-ready code. All changes integrated through the CI/CD pipeline eventually land here.
-# Spec-Bootstrap  
-[![Spec-Kit Validation](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml/badge.svg)](https://github.com/PR-CYBR/spec-bootstrap/actions/workflows/spec-kit.yml)  
 
-Spec-Bootstrap is a language agnostic template repository built on the Spec Kit specification-driven development framework. It provides a ready to use structure to capture your project’s constitution, specifications, implementation plans and tasks. This template ensures that your development process remains transparent, well‑documented, and consistent across projects.  
+## Overview
 
-## Usage  
-### Use as a Template  
-Click **Use this template** on the repository’s main page to scaffold a new project. GitHub will clone the files from this template (including the `.specify` directory and GitHub Actions workflows) into your new repository, so you can start specifying and planning your project immediately.  
+TeleMesh is a distributed telemetry mesh network designed for environmental and infrastructure monitoring. It provides a complete stack from edge sensor nodes through gateway aggregation to cloud-based data processing and visualization.
 
-### Integrate into an Existing Project  
-To adopt Spec Kit in an existing repository, merge this repository into your project (via `git pull` or by copying files). Make sure to copy the `.specify` directory and `.github/workflows` folder into your project root. Adapt the `constitution.md`, `spec.md`, and `plan.md` files to match your project’s goals and update the tasks accordingly.  
+## Architecture
 
-## Run Status Indicator  
-The badge above reflects the current status of the Spec Kit validation workflow on the `main` branch. It runs checks on required files, markdown syntax and link validation, and summarises tasks. A passing badge means the template structure is intact.  
+```
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│  Edge Sensor Nodes  │────▶│    Watcher Nodes    │────▶│    Gateway Node     │
+│  (ESP32-S3/Heltec)  │     │   (Python Probes)   │     │ (Reticulum Router)  │
+│  BME280 + INA219    │     │  Syslog/Traefik/    │     │  Meshtastic→MQTT    │
+│  JSON Telemetry     │     │  RTL-SDR/WiFi HaLow │     │  NATS/Influx/Loki   │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+                                      │                           │
+                                      ▼                           ▼
+                            ┌─────────────────────┐     ┌─────────────────────┐
+                            │  MQTT / Reticulum   │     │  Infrastructure     │
+                            │    Message Bus      │     │  K8s/Helm/Ansible   │
+                            └─────────────────────┘     └─────────────────────┘
+```
 
-## Branching Strategy  
-This repository implements a comprehensive branching scheme to support specification-driven development. See [BRANCHING.md](BRANCHING.md) for detailed documentation on:  
-- Purpose and usage of each branch (spec, plan, design, impl, dev, main, test, stage, prod, pages, gh-pages, codex)  
-- Automated pull request workflows between branches  
-- Branch protection rules and best practices  
-- Development lifecycle flow from specifications through production  
+## Repository Structure
 
-## AI Driven Development  
-This repository is designed to be used not only by humans but also by AI coding agents. When using an AI agent to scaffold or extend your project:  
-- **Start with the spec** – Agents should read and, if necessary, refine the documents in `.specify/constitution.md`, `.specify/spec.md` and `.specify/plan.md` before writing any code.  
-- **Follow the phases** – Agents must honor the Spec Kit workflow: specify, plan, create tasks and then implement. This prevents "vibe coding" and ensures work is grounded in agreed requirements.  
-- **Update as you go** – If the AI agent makes design decisions or adds features, it should update the spec and plan documents to keep them living and reflective of the code.  
-- **Respect the Constitution** – The project’s constitution defines non‑negotiable rules (coding standards, testing expectations, security requirements). AI agents should adhere to these guidelines when generating code or documentation.  
+```
+telemesh/
+├── edge-esn-firmware/    # ESP32-S3/Heltec Arduino firmware
+│   ├── src/              # Main firmware source
+│   ├── lib/              # Local libraries
+│   ├── include/          # Header files
+│   └── test/             # Unit tests
+├── watcher-node/         # Python probe detectors
+│   ├── src/probes/       # Syslog/Traefik/RTL-SDR/WiFi probes
+│   ├── src/publishers/   # MQTT/Reticulum publishers
+│   └── tests/            # Test suite
+├── gateway-node/         # Reticulum router and bridge
+│   ├── src/collectors/   # Telemetry collectors
+│   ├── src/bridges/      # Protocol bridges
+│   ├── src/router/       # Reticulum router
+│   └── tests/            # Test suite
+├── infra/                # Infrastructure as Code
+│   ├── kubernetes/       # K8s manifests
+│   ├── helm/             # Helm charts
+│   ├── ansible/          # Ansible playbooks
+│   ├── terraform/        # Terraform modules
+│   └── vault/            # Vault policies
+├── docs/                 # Documentation
+│   ├── architecture/     # System design
+│   ├── setup/            # Installation guides
+│   └── api/              # API references
+└── .specify/             # Spec-Kit specifications
+```
 
-## License  
-This project will be released under the [MIT License](LICENSE).  
+## Components
 
-## Quick Start  
-1. **Clone or Fork this repository**  
-  ```bash  
-  git clone https://github.com/PR-CYBR/spec-bootstrap.git  
-  cd spec-bootstrap  
-  ```  
+### Edge Sensor Node (edge-esn-firmware)
 
-2. **Review the Constitution**  
-  ```bash  
-  cat .specify/constitution.md  
-  ```  
+ESP32-S3/Heltec-based environmental sensor nodes:
 
-3. **Explore the Specifications**  
-  ```bash  
-  cat .specify/spec.md  
-  ```  
+- **Hardware**: ESP32-S3, Heltec LoRa modules
+- **Sensors**: BME280 (temp/humidity/pressure), INA219 (power monitoring)
+- **Communication**: JSON telemetry over LoRa, WiFi, or serial
+- **Events**: probe_event for sensor state changes
+- **Platform**: Arduino/PlatformIO
 
-4. **Check the Implementation Plan**  
-  ```bash  
-  cat .specify/plan.md  
-  ```  
+### Watcher Node (watcher-node)
 
-5. **View Tasks**  
-  ```bash  
-  ls -la .specify/tasks/  
-  ```  
+Python-based digital and RF probe detectors:
 
-6. **Initialize Terraform Infrastructure** (Optional)  
-  All repositories derived from this template include a baseline Terraform configuration for PR-CYBR agent standardization:
-  ```bash
-  cd infra
-  terraform init -backend=false
-  terraform validate
-  terraform plan -input=false -var-file=variables.tfvars
-  ```
-  
-  Before running these commands:
-  - Update `infra/variables.tfvars` with your agent-specific values
-  - Set sensitive values via environment variables (e.g., `export TF_VAR_dockerhub_user="username"`)
-  - See `.specify/tasks/infra-bootstrap.md` for detailed instructions
-  
-  **Note**: Derived projects inherit this baseline automatically for PR-CYBR agent alignment.
+- **Syslog Probe**: Monitor system logs for events
+- **Traefik Probe**: HTTP/HTTPS traffic monitoring
+- **RTL-SDR Probe**: Software-defined radio signal detection
+- **WiFi HaLow Probe**: 802.11ah long-range WiFi monitoring
+- **Publishing**: MQTT and Reticulum network integration
 
-## Automated Provisioning  
-During initial provisioning of a new repository derived from this template, multiple draft pull requests are created to add the specification, plan and workflow files. Normally these PRs require manual review because branch protection rules on the default branch prevent automation from merging. To support fully autonomous initialization while preserving safety, this template includes an initial provisioning workflow (`initial-provision.yml`).  
-This workflow runs only once — when the repository has no prior commits or when triggered with `is_initial_provision` set to `true`. It will:  
-- Detect that the repository is in a bootstrap state.  
-- Temporarily disable branch protection on the default branch using the GitHub API.  
-- Mark any draft bootstrap pull requests as ready for review and merge them automatically.  
-- Reapply the previous branch protection settings immediately after the merges.  
-- Provision Terraform Cloud workspace (if `TFC_TOKEN` is configured).
-- Add a `bootstrap-complete` tag or commit annotation for auditability.  
-If automation is disabled or fails, you may still perform the first merge manually by approving the draft PRs. After the initial provisioning completes, the regular CI/CD workflows and branch protections govern subsequent development as usual. 
+### Gateway Node (gateway-node)
 
-### Terraform Cloud Auto-Setup
-When you create a new repository from this template:
-- The Spec-Bootstrap system automatically provisions a TFC workspace during initial provisioning.
-- It synchronizes baseline variables from `/infra` to Terraform Cloud.
-- The workspace is tagged with "spec-bootstrap" and the repository name.
-- Secrets and API tokens are never stored in code — only injected via TFC or GitHub Secrets.
+Central aggregation and routing:
 
-**Setup Requirements:**
-1. Add a `TFC_TOKEN` secret to your repository (Settings → Secrets and variables → Actions).
-2. Generate the token from Terraform Cloud: User Settings → Tokens → Create an API token.
-3. The initial provisioning workflow will automatically create and configure your workspace.
+- **Reticulum Router**: Mesh network routing
+- **Meshtastic Bridge**: Meshtastic to MQTT protocol bridge
+- **Collectors**: Telemetry ingestion for NATS, InfluxDB, Loki
+- **Data Pipeline**: Event correlation and forwarding
 
-**Note:** If `TFC_TOKEN` is not configured, the TFC bootstrap step will be skipped with a warning. You can add the token later and manually trigger the `tfc-bootstrap.yml` workflow.
-2. **Review the Constitution**  
-  ```bash  
-  cat .specify/constitution.md  
-  ```  
-3. **Explore the Specifications**  
-  ```bash  
-  cat .specify/spec.md  
-  ```  
-4. **Check the Implementation Plan**  
-  ```bash  
-  cat .specify/plan.md  
-  ```  
-5. **View Tasks**  
-  ```bash  
-  ls -la .specify/tasks/  
-  ```
+### Infrastructure (infra)
 
-## Spec Kit Commands  
-The Spec Kit framework has a set of conceptual commands that are represented by files in this template:  
-- `/speckit.constitution` – defines project rules and non‑negotiables.  
-- `/speckit.specify` – describes what to build and why.  
-- `/speckit.plan` – outlines how to build it.  
-- `/speckit.tasks` – breaks the plan into actionable tasks.
+Complete deployment automation:
+
+- **Kubernetes**: Container orchestration manifests
+- **Helm**: Packaged deployments
+- **Ansible**: Node provisioning playbooks
+- **Terraform**: Cloud infrastructure
+- **Vault**: Secrets management
+- **Overlay Networks**: Tailscale/ZeroTier integration
+
+## Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/PR-CYBR/telemesh.git
+cd telemesh
+```
+
+### 2. Edge Sensor Node Setup
+
+```bash
+cd edge-esn-firmware
+# Install PlatformIO
+pip install platformio
+# Build and upload
+pio run -t upload
+```
+
+### 3. Watcher Node Setup
+
+```bash
+cd watcher-node
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+python -m watcher_node
+```
+
+### 4. Gateway Node Setup
+
+```bash
+cd gateway-node
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+python -m gateway_node
+```
+
+### 5. Infrastructure Deployment
+
+```bash
+cd infra/terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+## Specifications
+
+This project follows the Spec-Kit specification-driven development framework:
+
+- **Constitution**: [.specify/constitution.md](.specify/constitution.md) - Project principles
+- **Specifications**: [.specify/spec.md](.specify/spec.md) - Technical requirements
+- **Implementation Plan**: [.specify/plan.md](.specify/plan.md) - Development roadmap
+- **Tasks**: [.specify/tasks/](.specify/tasks/) - Actionable work items
+
+## Branching Strategy
+
+See [BRANCHING.md](BRANCHING.md) for the complete branching workflow supporting specification-driven development.
+
+## License
+
+This project is released under the [MIT License](LICENSE).

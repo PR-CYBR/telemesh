@@ -1,0 +1,43 @@
+{{- if .Values.gatewayNode.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "telemesh.fullname" . }}-gateway
+  labels:
+    {{- include "telemesh.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: {{ .Values.gatewayNode.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "telemesh.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  template:
+    metadata:
+      labels:
+        {{- include "telemesh.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+    spec:
+      containers:
+        - name: gateway-node
+          image: "{{ .Values.gatewayNode.image.repository }}:{{ .Values.gatewayNode.image.tag }}"
+          imagePullPolicy: {{ .Values.gatewayNode.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.gatewayNode.service.port }}
+              name: http
+          env:
+            {{- if .Values.collectors.nats.enabled }}
+            - name: NATS_URL
+              value: {{ .Values.collectors.nats.url | quote }}
+            {{- end }}
+            {{- if .Values.collectors.influxdb.enabled }}
+            - name: INFLUXDB_URL
+              value: {{ .Values.collectors.influxdb.url | quote }}
+            - name: INFLUXDB_ORG
+              value: {{ .Values.collectors.influxdb.org | quote }}
+            - name: INFLUXDB_BUCKET
+              value: {{ .Values.collectors.influxdb.bucket | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.gatewayNode.resources | nindent 12 }}
+{{- end }}

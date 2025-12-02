@@ -1,0 +1,71 @@
+# TeleMesh Helm Chart Values
+
+# Gateway Node configuration
+gatewayNode:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/pr-cybr/telemesh/gateway-node
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+  service:
+    type: ClusterIP
+    port: 8080
+
+# Watcher Node configuration
+watcherNode:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: ghcr.io/pr-cybr/telemesh/watcher-node
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# Collectors configuration
+collectors:
+  nats:
+    enabled: true
+    url: "nats://nats:4222"
+  influxdb:
+    enabled: true
+    url: "http://influxdb:8086"
+    org: "telemesh"
+    bucket: "telemetry"
+  loki:
+    enabled: true
+    url: "http://loki:3100"
+
+# MQTT Broker
+mqtt:
+  enabled: true
+  broker: "mqtt"
+  port: 1883
+  topic: "telemesh/events"
+
+# Reticulum configuration
+reticulum:
+  enabled: true
+  appName: "telemesh"
+
+# Overlay network
+overlay:
+  tailscale:
+    enabled: false
+    authKey: ""
+  zerotier:
+    enabled: false
+    networkId: ""

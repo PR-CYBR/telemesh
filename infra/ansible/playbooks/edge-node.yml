@@ -1,0 +1,40 @@
+---
+# TeleMesh Edge Node Provisioning Playbook
+# Provisions ESP32-S3/Heltec devices with firmware
+
+- name: Provision Edge Sensor Nodes
+  hosts: edge_nodes
+  become: false
+  gather_facts: true
+
+  vars:
+    firmware_path: "{{ playbook_dir }}/../../../edge-esn-firmware"
+    platformio_env: "heltec_wifi_lora_32_v3"
+
+  tasks:
+    - name: Check PlatformIO installation
+      ansible.builtin.command: pio --version
+      register: pio_version
+      changed_when: false
+      failed_when: false
+
+    - name: Install PlatformIO
+      ansible.builtin.pip:
+        name: platformio
+        state: present
+      when: pio_version.rc != 0
+
+    - name: Build firmware
+      ansible.builtin.command:
+        cmd: pio run -e {{ platformio_env }}
+        chdir: "{{ firmware_path }}"
+      register: build_result
+      changed_when: "'SUCCESS' in build_result.stdout"
+
+    - name: Upload firmware to device
+      ansible.builtin.command:
+        cmd: pio run -e {{ platformio_env }} -t upload
+        chdir: "{{ firmware_path }}"
+      when: build_result.rc == 0
+      register: upload_result
+      changed_when: "'SUCCESS' in upload_result.stdout"

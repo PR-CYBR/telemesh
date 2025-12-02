@@ -1,128 +1,138 @@
 # Implementation Plan
 
 ## Overview
-This plan outlines how to use and extend this Spec-Kit template for your project.
 
-## Phase 1: Template Adoption
+This plan outlines the phased implementation of the TeleMesh distributed telemetry mesh network.
+
+## Phase 1: Foundation
+
 **Status**: ✅ Complete
 
-- [x] Initialize `.specify` directory structure
-- [x] Create `constitution.md` with project principles
-- [x] Create `spec.md` with technical specifications
-- [x] Create this `plan.md` file
-- [x] Create `tasks/` directory for task management
-- [x] Set up GitHub workflow for automation
-- [x] Document usage in README
+- [x] Initialize monorepo structure
+- [x] Create directory layout for all components
+- [x] Update specification documents
+- [x] Set up .gitignore for all project types
 
-## Phase 2: Project Initialization
-**Status**: ⏳ Pending (User Action Required)
+## Phase 2: Edge Sensor Node (edge-esn-firmware)
 
-When starting a new project with this template:
+**Status**: ⏳ In Progress
 
-- [ ] Clone or fork this repository
-- [ ] Review and customize `constitution.md` for your team's principles
-- [ ] Update `spec.md` with your project's technical requirements
-- [ ] Modify this `plan.md` to reflect your implementation roadmap
-- [ ] Add initial tasks to the `tasks/` directory
-- [ ] Update README with project-specific information
+### Tasks
 
-## Phase 3: Technology Stack Integration
-**Status**: ⏳ Pending (User Action Required)
+- [x] Create PlatformIO project structure
+- [x] Implement BME280 sensor driver
+- [x] Implement INA219 sensor driver
+- [x] Create JSON telemetry message formatting
+- [x] Implement probe_event generation
+- [ ] Add LoRa communication layer
+- [ ] Add WiFi fallback communication
+- [ ] Create unit tests
+- [ ] Document hardware setup
 
-Add your chosen technology stack:
+## Phase 3: Watcher Node (watcher-node)
 
-- [ ] Add programming language(s) and runtime
-- [ ] Configure build system and dependency management
-- [ ] Set up testing framework
-- [ ] Add linting and code quality tools
-- [ ] Configure CI/CD pipelines
-- [ ] Update `.gitignore` for your stack
-- [ ] Extend `spec-kit.yml` workflow with stack-specific checks
+**Status**: ⏳ In Progress
 
-## Phase 4: Development Workflow
-**Status**: ✅ Complete (Branching Strategy) / ⏳ Pending (Other Items)
+### Tasks
 
-Establish development practices:
+- [x] Create Python package structure
+- [x] Implement base probe interface
+- [x] Implement syslog probe
+- [x] Implement Traefik probe
+- [x] Implement RTL-SDR probe
+- [x] Implement WiFi HaLow probe
+- [x] Implement MQTT publisher
+- [x] Implement Reticulum publisher
+- [ ] Add configuration management
+- [ ] Create integration tests
+- [ ] Document probe configuration
 
-- [x] Define branching strategy (see [BRANCHING.md](../BRANCHING.md))
-  - Specification branches: `spec` for requirements and technical specifications
-  - Planning branches: `plan` for implementation planning and task breakdown
-  - Design branches: `design` for UI/UX artifacts and design systems
-  - Implementation branches: `impl` for active development work
-  - Development branches: `dev` for feature integration
-  - Main branch: `main` as stable baseline
-  - Test branches: `test` for continuous integration
-  - Staging branches: `stage` for pre-production validation
-  - Production branches: `prod` for deployed code
-  - Documentation branches: `pages` and `gh-pages` for static sites
-  - Knowledge branches: `codex` for code examples and tutorials
-- [ ] Set up code review process
-- [ ] Configure issue templates
-- [ ] Create pull request templates
-- [ ] Document development setup
-- [ ] Establish testing requirements
-- [ ] Define deployment procedures
+## Phase 4: Gateway Node (gateway-node)
 
-## Using Spec-Kit Commands
+**Status**: ⏳ In Progress
 
-### Viewing Specifications
-```bash
-# Constitution
-cat .specify/constitution.md
+### Tasks
 
-# Specifications
-cat .specify/spec.md
+- [x] Create Python package structure
+- [x] Implement Reticulum router
+- [x] Implement Meshtastic-MQTT bridge
+- [x] Implement NATS collector
+- [x] Implement InfluxDB collector
+- [x] Implement Loki collector
+- [ ] Add health monitoring
+- [ ] Create integration tests
+- [ ] Document deployment
 
-# Plan
-cat .specify/plan.md
+## Phase 5: Infrastructure
 
-# Tasks
-ls -la .specify/tasks/
-cat .specify/tasks/<task-name>.md
-```
+**Status**: ⏳ In Progress
 
-### Creating Tasks
-Create new task files in `.specify/tasks/` following this template:
+### Kubernetes & Helm
 
-```markdown
-# Task: [Task Name]
+- [x] Create namespace manifest
+- [x] Create gateway-node deployment
+- [x] Create Helm chart structure
+- [ ] Add ConfigMaps and Secrets
+- [ ] Add ingress configuration
+- [ ] Document Helm values
 
-## Objective
-[What needs to be accomplished]
+### Ansible
 
-## Requirements
-- [ ] Requirement 1
-- [ ] Requirement 2
+- [x] Create playbook structure
+- [x] Create common role
+- [ ] Create reticulum role
+- [ ] Create monitoring role
+- [ ] Document inventory setup
 
-## Implementation Notes
-[Technical details and considerations]
+### Terraform
 
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
+- [x] Update main.tf for telemesh
+- [x] Create networking module
+- [x] Create overlay module
+- [ ] Add compute resources
+- [ ] Document cloud deployment
 
-## Status
-[Not Started | In Progress | Complete]
-```
+### Vault
 
-## Maintenance and Evolution
+- [x] Create base policies
+- [ ] Add secret engines
+- [ ] Configure auth methods
+- [ ] Document secrets management
 
-### Regular Reviews
-- Review constitution quarterly for relevance
-- Update specifications as requirements change
-- Keep plan synchronized with actual progress
-- Archive completed tasks
+## Phase 6: Documentation
 
-### Continuous Improvement
-- Gather feedback from team members
-- Refine processes based on experience
-- Update automation workflows
-- Share learnings and best practices
+**Status**: ⏳ In Progress
+
+- [x] Create architecture overview
+- [x] Create setup guide
+- [ ] Create API reference
+- [ ] Add troubleshooting guide
+- [ ] Create contributor guide
+
+## Phase 7: Testing & Validation
+
+**Status**: ⏳ Pending
+
+- [ ] Edge node hardware testing
+- [ ] Watcher node integration tests
+- [ ] Gateway node load testing
+- [ ] End-to-end mesh testing
+- [ ] Infrastructure deployment testing
+
+## Phase 8: Production Readiness
+
+**Status**: ⏳ Pending
+
+- [ ] Security audit
+- [ ] Performance optimization
+- [ ] Monitoring dashboard setup
+- [ ] Runbook creation
+- [ ] Release documentation
 
 ## Success Metrics
 
-- All team members understand the constitution
-- Specifications remain current and accurate
-- Plan reflects actual project state
-- Tasks are granular and actionable
-- Workflows provide value through automation
+- All components build successfully
+- Unit tests pass with >80% coverage
+- Integration tests validate message flow
+- Documentation covers all setup scenarios
+- Infrastructure deploys without manual steps

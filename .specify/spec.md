@@ -1,150 +1,294 @@
 # Specification
 
 ## Overview
-This document contains the technical specifications for projects built using this Spec-Kit template.
 
-## Template Specifications
+TeleMesh is a distributed telemetry mesh network providing environmental and infrastructure monitoring through a layered architecture of edge sensors, watcher nodes, and gateway aggregation.
+
+## System Architecture
+
+### Component Overview
+
+```
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│  Edge Sensor Nodes  │────▶│    Watcher Nodes    │────▶│    Gateway Node     │
+│  (ESP32-S3/Heltec)  │     │   (Python Probes)   │     │ (Reticulum Router)  │
+│  BME280 + INA219    │     │  Syslog/Traefik/    │     │  Meshtastic→MQTT    │
+│  JSON Telemetry     │     │  RTL-SDR/WiFi HaLow │     │  NATS/Influx/Loki   │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+```
+
+### Communication Protocols
+
+- **LoRa**: Edge nodes to mesh network
+- **MQTT**: Pub/sub messaging
+- **Reticulum**: Encrypted mesh routing
+- **Meshtastic**: LoRa mesh network
+- **NATS**: Event streaming
+- **HTTP/REST**: API interfaces
+
+## Edge Sensor Node (edge-esn-firmware)
+
+### Hardware Requirements
+
+| Component | Model | Purpose |
+|-----------|-------|---------|
+| MCU | ESP32-S3 | Main processor |
+| LoRa Module | Heltec | Mesh communication |
+| Temp/Humidity/Pressure | BME280 | Environmental sensing |
+| Power Monitor | INA219 | Voltage/current measurement |
+
+### Firmware Specifications
+
+#### Platform
+- **Framework**: Arduino
+- **Build System**: PlatformIO
+- **Target**: ESP32-S3 (Heltec)
+
+#### Telemetry Message Format
+
+```json
+{
+  "node_id": "esn-001",
+  "timestamp": 1701532800,
+  "sensors": {
+    "bme280": {
+      "temperature_c": 22.5,
+      "humidity_pct": 45.2,
+      "pressure_hpa": 1013.25
+    },
+    "ina219": {
+      "voltage_v": 3.7,
+      "current_ma": 125.4,
+      "power_mw": 463.98
+    }
+  }
+}
+```
+
+#### Probe Event Format
+
+```json
+{
+  "node_id": "esn-001",
+  "event_type": "probe_event",
+  "timestamp": 1701532800,
+  "probe": "threshold",
+  "trigger": "temperature_high",
+  "value": 35.2,
+  "threshold": 30.0
+}
+```
 
 ### Directory Structure
+
 ```
-/
-├── .specify/
-│   ├── constitution.md    # Project principles and governance
-│   ├── spec.md           # This file - technical specifications
-│   ├── plan.md           # Implementation planning
-│   └── tasks/            # Individual task specifications
-├── .github/
-│   └── workflows/
-│       └── spec-kit.yml  # Automation workflow
-├── infra/                # Terraform infrastructure configuration
-│   ├── main.tf           # Main Terraform configuration
-│   ├── variables.tf      # Variable definitions
-│   ├── variables.tfvars  # Variable values template
-│   ├── providers.tf      # Provider configurations
-│   └── outputs.tf        # Output definitions
-└── README.md             # Project documentation
+edge-esn-firmware/
+├── platformio.ini        # PlatformIO configuration
+├── src/
+│   ├── main.cpp          # Main application entry
+│   ├── sensors.cpp       # Sensor reading logic
+│   ├── telemetry.cpp     # JSON message formatting
+│   └── communication.cpp # LoRa/WiFi transmission
+├── include/
+│   ├── config.h          # Configuration constants
+│   ├── sensors.h         # Sensor interface
+│   └── telemetry.h       # Message structures
+├── lib/                  # Local libraries
+└── test/                 # Unit tests
 ```
 
-### Spec-Kit Commands
+## Watcher Node (watcher-node)
 
-The following commands should be available for managing specifications:
+### Probe Types
 
-#### /speckit.constitution
-- **Purpose**: Review or update the project constitution
-- **Usage**: Displays constitution principles and governance rules
-- **Implementation**: Read and display `.specify/constitution.md`
+| Probe | Source | Events |
+|-------|--------|--------|
+| Syslog | /var/log/syslog | Log pattern matches |
+| Traefik | Traefik API/logs | HTTP traffic events |
+| RTL-SDR | RTL-SDR dongle | RF signal detection |
+| WiFi HaLow | 802.11ah interface | Connection events |
 
-#### /speckit.specify
-- **Purpose**: Review or update technical specifications
-- **Usage**: Displays current specifications
-- **Implementation**: Read and display `.specify/spec.md`
+### Python Package Specifications
 
-#### /speckit.plan
-- **Purpose**: Review or update the implementation plan
-- **Usage**: Displays high-level project plan
-- **Implementation**: Read and display `.specify/plan.md`
+#### Dependencies
 
-#### /speckit.tasks
-- **Purpose**: List and manage individual tasks
-- **Usage**: Displays all tasks from the tasks directory
-- **Implementation**: List and display files in `.specify/tasks/`
+- `paho-mqtt>=2.0` - MQTT client
+- `rns>=0.7` - Reticulum Network Stack
+- `pyrtlsdr>=0.3` - RTL-SDR interface
+- `watchdog>=4.0` - File system monitoring
 
-### Workflow Requirements
+#### Module Structure
 
-The `.github/workflows/spec-kit.yml` workflow should:
-1. Validate markdown syntax in specification files
-2. Check for broken links in documentation
-3. Ensure required files exist
-4. Run on pull requests and pushes to main branch
-
-### Branch-Specific Workflows
-
-Each branch in the comprehensive branching scheme has dedicated workflows:
-
-#### Specification and Planning Workflows
-- `spec.yml`: Validates specification documents in the `spec` branch
-- `plan.yml`: Validates planning documents in the `plan` branch
-- `design.yml`: Validates design artifacts in the `design` branch
-
-#### Development Workflows
-- `impl.yml`: Runs implementation-specific validation in the `impl` branch
-- `dev.yml`: Executes development tasks in the `dev` branch
-- `test.yml`: Runs comprehensive test suites in the `test` branch
-
-#### Deployment Workflows
-- `stage.yml`: Deploys to staging environment from the `stage` branch
-- `prod.yml`: Handles production deployment from the `prod` branch
-- `pages.yml`: Builds and deploys documentation from the `pages` branch
-- `gh-pages.yml`: Alternative GitHub Pages deployment from the `gh-pages` branch
-- `codex.yml`: Validates knowledge base content in the `codex` branch
-
-#### Automated Pull Request Workflows
-- `auto-pr-spec-to-plan.yml`: Promotes specifications to planning
-- `auto-pr-plan-to-impl.yml`: Promotes plans to implementation
-- `auto-pr-design-to-impl.yml`: Integrates design into implementation
-- `auto-pr-impl-to-dev.yml`: Integrates implementation into development
-- `auto-pr-dev-to-main.yml`: Promotes development to stable baseline
-- `auto-pr-main-to-stage.yml`: Promotes stable code to staging
-- `auto-pr-main-to-test.yml`: Synchronizes testing with stable code
-- `auto-pr-stage-to-prod.yml`: Promotes staging to production
-- `auto-pr-prod-to-pages.yml`: Updates documentation from production
-- `auto-pr-codex-to-pages.yml`: Publishes knowledge base to documentation
-
-### Infrastructure as Code
-
-All repositories derived from this template include a baseline Terraform configuration in the `infra/` directory. This provides:
-
-#### PR-CYBR Agent Standardization
-- Consistent variable schema across all PR-CYBR agents
-- Standard variables: `agent_id`, `agent_role`, `environment`, `dockerhub_user`, `notion_page_id`
-- Alignment with PR-CYBR `agent-variables.tf` specification
-
-#### Terraform Configuration Structure
-- **main.tf**: Core infrastructure configuration with commented backend block
-- **variables.tf**: Variable definitions with validation rules
-- **variables.tfvars**: Template with placeholder values (safe to commit)
-- **providers.tf**: Provider configurations (Terraform Cloud, GitHub) ready for initialization
-- **outputs.tf**: Standardized outputs for agent identification and connection info
-
-#### Security and Best Practices
-- Sensitive values injected via environment variables (`TF_VAR_*`)
-- No secrets or environment-specific data in version control
-- Backend configuration commented out by default for safe initialization
-- Validation rules ensure data consistency
-
-#### Initialization Workflow
-```bash
-cd infra
-terraform init -backend=false
-terraform fmt
-terraform validate
-terraform plan -input=false -var-file=variables.tfvars
+```
+watcher-node/
+├── pyproject.toml
+├── src/
+│   ├── watcher_node/
+│   │   ├── __init__.py
+│   │   ├── __main__.py
+│   │   ├── config.py
+│   │   ├── probes/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── syslog.py
+│   │   │   ├── traefik.py
+│   │   │   ├── rtlsdr.py
+│   │   │   └── wifi_halow.py
+│   │   └── publishers/
+│   │       ├── __init__.py
+│   │       ├── base.py
+│   │       ├── mqtt.py
+│   │       └── reticulum.py
+└── tests/
+    ├── test_probes.py
+    └── test_publishers.py
 ```
 
-See `.specify/tasks/infra-bootstrap.md` for detailed initialization instructions.
+### Event Message Format
 
-### Extensibility
+```json
+{
+  "source": "watcher-001",
+  "probe": "syslog",
+  "timestamp": 1701532800,
+  "event": {
+    "pattern": "ssh_login",
+    "message": "Accepted publickey for user from 192.168.1.100",
+    "severity": "info"
+  }
+}
+```
 
-This template is designed to be extended with:
-- Technology-specific tooling (linters, build systems, test frameworks)
-- Additional automation workflows
-- Custom task management integrations
-- Project-specific specifications
-- Infrastructure resources in `infra/main.tf` based on agent requirements
+## Gateway Node (gateway-node)
+
+### Components
+
+| Component | Function |
+|-----------|----------|
+| Reticulum Router | Mesh network routing |
+| Meshtastic Bridge | Meshtastic to MQTT protocol conversion |
+| NATS Collector | Event stream ingestion |
+| InfluxDB Collector | Time-series metrics storage |
+| Loki Collector | Log aggregation |
+
+### Python Package Specifications
+
+#### Dependencies
+
+- `rns>=0.7` - Reticulum Network Stack
+- `meshtastic>=2.0` - Meshtastic interface
+- `paho-mqtt>=2.0` - MQTT client
+- `nats-py>=2.0` - NATS client
+- `influxdb-client>=1.40` - InfluxDB client
+- `httpx>=0.25` - HTTP client (for Loki)
+
+#### Module Structure
+
+```
+gateway-node/
+├── pyproject.toml
+├── src/
+│   ├── gateway_node/
+│   │   ├── __init__.py
+│   │   ├── __main__.py
+│   │   ├── config.py
+│   │   ├── router/
+│   │   │   ├── __init__.py
+│   │   │   └── reticulum.py
+│   │   ├── bridges/
+│   │   │   ├── __init__.py
+│   │   │   └── meshtastic_mqtt.py
+│   │   └── collectors/
+│   │       ├── __init__.py
+│   │       ├── base.py
+│   │       ├── nats.py
+│   │       ├── influxdb.py
+│   │       └── loki.py
+└── tests/
+    ├── test_router.py
+    ├── test_bridges.py
+    └── test_collectors.py
+```
+
+## Infrastructure
+
+### Kubernetes
+
+- Namespace: `telemesh`
+- Deployments: gateway-node, watcher-node replicas
+- Services: ClusterIP for internal, LoadBalancer for external
+- ConfigMaps: Application configuration
+- Secrets: Credentials and certificates
+
+### Helm Chart
+
+```
+infra/helm/telemesh/
+├── Chart.yaml
+├── values.yaml
+├── templates/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── secret.yaml
+```
+
+### Ansible
+
+```
+infra/ansible/
+├── playbooks/
+│   ├── edge-node.yml      # Edge sensor provisioning
+│   ├── watcher-node.yml   # Watcher node setup
+│   └── gateway-node.yml   # Gateway node setup
+├── roles/
+│   ├── common/            # Base system configuration
+│   ├── reticulum/         # Reticulum installation
+│   └── monitoring/        # Prometheus/Grafana
+```
+
+### Terraform
+
+```
+infra/terraform/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── modules/
+│   ├── networking/        # VPC, subnets
+│   ├── compute/           # EC2/VMs
+│   └── overlay/           # Tailscale/ZeroTier
+```
+
+### Vault
+
+- Secret engines: KV v2 for credentials
+- Policies: Per-component access control
+- Auth methods: Kubernetes, AppRole
+
+### Overlay Networking
+
+- **Tailscale**: Primary overlay for secure mesh
+- **ZeroTier**: Alternative for self-hosted deployments
 
 ## Non-Functional Requirements
 
-### Maintainability
-- All specification files use Markdown format
-- Clear, hierarchical organization
-- Version controlled alongside code
+### Performance
+- Edge nodes: <1s telemetry interval capability
+- Watcher nodes: <100ms event detection latency
+- Gateway: Handle 1000+ msgs/sec throughput
 
-### Portability
-- No technology-specific dependencies in the template
-- Cross-platform compatibility
-- Standard file formats
+### Reliability
+- Mesh networking tolerates node failures
+- Data buffering during connectivity loss
+- Automatic reconnection and retry logic
 
-### Usability
-- Clear documentation in README
-- Self-explanatory directory structure
-- Minimal learning curve for new users
+### Security
+- All communications encrypted (TLS/RNSL)
+- Mutual TLS for service-to-service
+- Secrets never in code or config files
+
+### Observability
+- Structured logging (JSON)
+- Prometheus metrics exposure
+- Distributed tracing support

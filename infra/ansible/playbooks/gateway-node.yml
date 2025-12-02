@@ -1,0 +1,61 @@
+---
+# TeleMesh Gateway Node Provisioning Playbook
+
+- name: Provision Gateway Nodes
+  hosts: gateway_nodes
+  become: true
+  gather_facts: true
+
+  vars:
+    gateway_node_path: /opt/telemesh/gateway-node
+    python_version: "3.11"
+
+  roles:
+    - common
+
+  tasks:
+    - name: Install Python {{ python_version }}
+      ansible.builtin.apt:
+        name:
+          - python{{ python_version }}
+          - python{{ python_version }}-venv
+          - python{{ python_version }}-dev
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ gateway_node_path }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create virtual environment
+      ansible.builtin.command:
+        cmd: python{{ python_version }} -m venv {{ gateway_node_path }}/venv
+        creates: "{{ gateway_node_path }}/venv"
+
+    - name: Install gateway-node package with all extras
+      ansible.builtin.pip:
+        name: git+https://github.com/PR-CYBR/telemesh.git#subdirectory=gateway-node[all]
+        virtualenv: "{{ gateway_node_path }}/venv"
+        state: present
+
+    - name: Create systemd service
+      ansible.builtin.template:
+        src: gateway-node.service.j2
+        dest: /etc/systemd/system/gateway-node.service
+        mode: "0644"
+      notify: Restart gateway-node
+
+    - name: Enable and start gateway-node
+      ansible.builtin.systemd:
+        name: gateway-node
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart gateway-node
+      ansible.builtin.systemd:
+        name: gateway-node
+        state: restarted
