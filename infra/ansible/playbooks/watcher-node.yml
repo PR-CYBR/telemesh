@@ -1,0 +1,61 @@
+---
+# TeleMesh Watcher Node Provisioning Playbook
+
+- name: Provision Watcher Nodes
+  hosts: watcher_nodes
+  become: true
+  gather_facts: true
+
+  vars:
+    watcher_node_path: /opt/telemesh/watcher-node
+    python_version: "3.11"
+
+  roles:
+    - common
+
+  tasks:
+    - name: Install Python {{ python_version }}
+      ansible.builtin.apt:
+        name:
+          - python{{ python_version }}
+          - python{{ python_version }}-venv
+          - python{{ python_version }}-dev
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ watcher_node_path }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create virtual environment
+      ansible.builtin.command:
+        cmd: python{{ python_version }} -m venv {{ watcher_node_path }}/venv
+        creates: "{{ watcher_node_path }}/venv"
+
+    - name: Install watcher-node package
+      ansible.builtin.pip:
+        name: git+https://github.com/PR-CYBR/telemesh.git#subdirectory=watcher-node
+        virtualenv: "{{ watcher_node_path }}/venv"
+        state: present
+
+    - name: Create systemd service
+      ansible.builtin.template:
+        src: watcher-node.service.j2
+        dest: /etc/systemd/system/watcher-node.service
+        mode: "0644"
+      notify: Restart watcher-node
+
+    - name: Enable and start watcher-node
+      ansible.builtin.systemd:
+        name: watcher-node
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart watcher-node
+      ansible.builtin.systemd:
+        name: watcher-node
+        state: restarted

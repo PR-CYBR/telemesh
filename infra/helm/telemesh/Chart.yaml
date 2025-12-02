@@ -1,0 +1,15 @@
+apiVersion: v2
+name: telemesh
+description: TeleMesh - Distributed Telemetry Mesh Network
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - telemetry
+  - mesh
+  - iot
+  - monitoring
+home: https://github.com/PR-CYBR/telemesh
+maintainers:
+  - name: PR-CYBR
+    url: https://github.com/PR-CYBR

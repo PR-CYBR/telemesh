@@ -1,0 +1,38 @@
+---
+# Common tasks for all TeleMesh nodes
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - curl
+      - wget
+      - ca-certificates
+      - gnupg
+      - lsb-release
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create telemesh group
+  ansible.builtin.group:
+    name: telemesh
+    state: present
+
+- name: Create telemesh user
+  ansible.builtin.user:
+    name: telemesh
+    group: telemesh
+    system: true
+    shell: /usr/sbin/nologin
+    home: /opt/telemesh
+    create_home: true
+
+- name: Set timezone
+  community.general.timezone:
+    name: UTC
