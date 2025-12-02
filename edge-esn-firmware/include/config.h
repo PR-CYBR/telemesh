@@ -31,9 +31,16 @@
 #define HUMIDITY_HIGH_THRESHOLD 80.0
 #define VOLTAGE_LOW_THRESHOLD 3.3
 
-// WiFi configuration (if used)
-#define WIFI_SSID "telemesh-network"
+// WiFi configuration
+// WARNING: Do not commit real credentials to version control!
+// Override these values in a local config or use environment-based configuration.
+// For production, consider using WiFiManager or storing credentials in NVS.
+#ifndef WIFI_SSID
+#define WIFI_SSID ""
+#endif
+#ifndef WIFI_PASSWORD
 #define WIFI_PASSWORD ""
+#endif
 
 // MQTT configuration (if used)
 #define MQTT_BROKER "mqtt.local"

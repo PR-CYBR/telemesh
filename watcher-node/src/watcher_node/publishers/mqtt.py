@@ -2,6 +2,7 @@
 
 import logging
 import threading
+import uuid
 
 import paho.mqtt.client as mqtt
 
@@ -19,7 +20,7 @@ class MQTTPublisher(BasePublisher):
         broker: str = "localhost",
         port: int = 1883,
         topic: str = "telemesh/events",
-        client_id: str = "watcher-node",
+        client_id: str | None = None,
         username: str | None = None,
         password: str | None = None,
         tls: bool = False,
@@ -30,7 +31,7 @@ class MQTTPublisher(BasePublisher):
             broker: MQTT broker hostname
             port: MQTT broker port
             topic: Topic to publish events to
-            client_id: MQTT client identifier
+            client_id: MQTT client identifier (auto-generated if not provided)
             username: Optional username for authentication
             password: Optional password for authentication
             tls: Enable TLS encryption
@@ -38,7 +39,8 @@ class MQTTPublisher(BasePublisher):
         self.broker = broker
         self.port = port
         self.topic = topic
-        self.client_id = client_id
+        # Generate unique client_id to prevent conflicts with multiple nodes
+        self.client_id = client_id or f"watcher-node-{uuid.uuid4().hex[:8]}"
         self.username = username
         self.password = password
         self.tls = tls

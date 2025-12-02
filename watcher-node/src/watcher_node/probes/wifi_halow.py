@@ -10,6 +10,10 @@ from .base import BaseProbe
 
 logger = logging.getLogger(__name__)
 
+# WiFi HaLow (802.11ah) frequency range constants (MHz)
+HALOW_FREQ_MIN_MHZ = 750
+HALOW_FREQ_MAX_MHZ = 950
+
 
 class WiFiHaLowProbe(BaseProbe):
     """Probe for monitoring WiFi HaLow (802.11ah) networks."""
@@ -133,7 +137,9 @@ class WiFiHaLowProbe(BaseProbe):
                     freq = int(freq_match.group(1))
                     current_network["frequency"] = freq
                     # 802.11ah uses sub-1GHz frequencies (typically 900MHz band)
-                    current_network["is_halow"] = 750 <= freq <= 950
+                    current_network["is_halow"] = (
+                        HALOW_FREQ_MIN_MHZ <= freq <= HALOW_FREQ_MAX_MHZ
+                    )
 
             # Signal level
             elif line.startswith("signal:"):

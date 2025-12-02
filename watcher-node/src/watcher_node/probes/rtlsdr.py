@@ -17,6 +17,15 @@ except ImportError:
     HAS_RTLSDR = False
     logger.debug("RTL-SDR library not available")
 
+# numpy is optional (only needed for signal processing)
+try:
+    import numpy as np
+    HAS_NUMPY = True
+except ImportError:
+    np = None  # type: ignore
+    HAS_NUMPY = False
+    logger.debug("numpy library not available")
+
 
 class RTLSDRProbe(BaseProbe):
     """Probe for detecting RF signals using RTL-SDR."""
@@ -105,7 +114,9 @@ class RTLSDRProbe(BaseProbe):
 
     def _scan_loop(self) -> None:
         """Main scanning loop."""
-        import numpy as np
+        if not HAS_NUMPY:
+            logger.error("numpy not available, cannot run RTL-SDR scanning")
+            return
 
         while self._running and self._sdr:
             try:

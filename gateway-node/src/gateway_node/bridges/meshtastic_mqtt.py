@@ -127,8 +127,13 @@ class MeshtasticMQTTBridge:
                 self._meshtastic_interface = TCPInterface(self.meshtastic_host)
 
             # Register callback for received packets
-            from pubsub import pub
-            pub.subscribe(self._on_meshtastic_receive, "meshtastic.receive")
+            try:
+                from pubsub import pub
+                pub.subscribe(self._on_meshtastic_receive, "meshtastic.receive")
+            except ImportError:
+                logger.warning("pubsub library not available for Meshtastic callbacks")
+            except Exception as sub_error:
+                logger.warning("Failed to subscribe to Meshtastic events: %s", sub_error)
 
             logger.info("Connected to Meshtastic via %s", self.meshtastic_connection)
 
