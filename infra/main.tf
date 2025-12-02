@@ -27,16 +27,16 @@ resource "null_resource" "agent_config" {
 
 # Networking module for overlay networks
 module "networking" {
-  source = "./modules/networking"
+  source = "./terraform/modules/networking"
 
-  environment    = var.environment
-  vpc_cidr       = var.vpc_cidr
-  enable_ipv6    = var.enable_ipv6
+  environment = var.environment
+  vpc_cidr    = var.vpc_cidr
+  enable_ipv6 = var.enable_ipv6
 }
 
 # Overlay network module (Tailscale/ZeroTier)
 module "overlay" {
-  source = "./modules/overlay"
+  source = "./terraform/modules/overlay"
 
   environment       = var.environment
   tailscale_enabled = var.tailscale_enabled
