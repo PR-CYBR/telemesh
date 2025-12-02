@@ -3,6 +3,7 @@
 variable "agent_id" {
   description = "Unique identifier for the PR-CYBR agent"
   type        = string
+  default     = "telemesh-agent"
 
   validation {
     condition     = can(regex("^[a-z0-9-]+$", var.agent_id))
@@ -24,6 +25,7 @@ variable "agent_role" {
 variable "environment" {
   description = "Deployment environment (dev, staging, prod)"
   type        = string
+  default     = "dev"
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
